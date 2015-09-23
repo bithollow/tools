@@ -2,6 +2,7 @@
 
 LOOP_DEV=loop0
 IMG_SIZE=6442450944  #6GB
+KERNEL_VER=4.1.15
 
 dd if=/dev/zero of=rpi.img count=0 bs=1 seek=$IMG_SIZE
 
@@ -29,7 +30,7 @@ sudo rsync -a rootfs/ mnt/root/
 sudo cp -a ../firmware/hardfp/opt/vc mnt/root/opt/
 sudo cp -a ../linux/build/dist/lib/modules mnt/root/lib/
 sudo cp -a ../linux/build/dist/include/* mnt/root/usr/include
-sudo cp ../linux/build/.config mnt/root/boot/config-3.18.9-preempt-rt5
+sudo cp ../linux/build/.config mnt/root/boot/config-${KERNEL_VER}-preempt-rt5
 sudo cp ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
 sudo cp ../firmware/boot/{*bin,*dat,*elf} mnt/firmware/
 sudo sh -c 'cat > mnt/firmware/config.txt << EOF
