@@ -47,6 +47,6 @@ EOF
 '
 sudo umount mnt/{firmware,root}
 
-bzip2 -9 rpi_6g.img
+bzip2 -9 rpi.img
 
 # sudo sh -c 'bzcat rpi.img.bz2 > /dev/mmcblk0'
