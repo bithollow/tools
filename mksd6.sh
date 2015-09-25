@@ -2,7 +2,7 @@
 
 LOOP_DEV=loop0
 IMG_SIZE=6442450944  #6GB
-KERNEL_VER=4.1.15
+KERNEL_VER=4.1.5
 
 dd if=/dev/zero of=rpi.img count=0 bs=1 seek=$IMG_SIZE
 
