@@ -3,6 +3,12 @@
 LOOP_DEV=loop0
 IMG_SIZE=6442450944  #6GB
 KERNEL_VER=4.1.5
+CHECK_QEMU=0
+
+if [ -e rootfs/usr/bin/qemu-arm-static ]; then
+    CHECK_QEMU=1
+    sudo rm -rf  rootfs/usr/bin/qemu-arm-static
+fi
 
 dd if=/dev/zero of=rpi.img count=0 bs=1 seek=$IMG_SIZE
 
@@ -33,6 +39,7 @@ sudo cp -a ../linux/build/dist/include/* mnt/root/usr/include
 sudo cp ../linux/build/.config mnt/root/boot/config-${KERNEL_VER}-preempt-rt5
 sudo cp ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
 sudo cp ../firmware/boot/{*bin,*dat,*elf} mnt/firmware/
+
 sudo sh -c 'cat > mnt/firmware/config.txt << EOF
 kernel=kernel.img
 core_freq=250
@@ -46,6 +53,10 @@ dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0 dwc_otg.lpm_
 EOF
 '
 sudo umount mnt/{firmware,root}
+
+if [ $CHECK_QEMU -eq 1 ]; then
+    sudo cp $(which qemu-arm-static) rootfs/usr/bin
+fi
 
 bzip2 -9 rpi.img
 
