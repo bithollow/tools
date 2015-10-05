@@ -2,7 +2,7 @@
 
 LOOP_DEV=loop0
 IMG_SIZE=6442450944  #6GB
-KERNEL_VER=4.1.5
+KERNEL_VER=4.1.9
 CHECK_QEMU=0
 
 if [ -e rootfs/usr/bin/qemu-arm-static ]; then
@@ -36,7 +36,7 @@ sudo rsync -a rootfs/ mnt/root/
 sudo cp -a ../firmware/hardfp/opt/vc mnt/root/opt/
 sudo cp -a ../linux/build/dist/lib/modules mnt/root/lib/
 sudo cp -a ../linux/build/dist/include/* mnt/root/usr/include
-sudo cp ../linux/build/.config mnt/root/boot/config-${KERNEL_VER}-preempt-rt5
+sudo cp ../linux/build/.config mnt/root/boot/config-${KERNEL_VER}-preempt-rt8
 sudo cp ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
 sudo cp ../firmware/boot/{*bin,*dat,*elf} mnt/firmware/
 
@@ -58,6 +58,7 @@ if [ $CHECK_QEMU -eq 1 ]; then
     sudo cp $(which qemu-arm-static) rootfs/usr/bin
 fi
 
+rm -rf rpi.img.bz2
 bzip2 -9 rpi.img
 
 # sudo sh -c 'bzcat rpi.img.bz2 > /dev/mmcblk0'
