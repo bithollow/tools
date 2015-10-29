@@ -3,12 +3,6 @@
 LOOP_DEV=loop0
 IMG_SIZE=6442450944  #6GB
 KERNEL_VER=4.1.9
-CHECK_QEMU=0
-
-if [ -e rootfs/usr/bin/qemu-arm-static ]; then
-    CHECK_QEMU=1
-    sudo rm -rf  rootfs/usr/bin/qemu-arm-static
-fi
 
 dd if=/dev/zero of=rpi.img count=0 bs=1 seek=$IMG_SIZE
 
@@ -40,6 +34,9 @@ sudo cp ../linux/build/.config mnt/root/boot/config-${KERNEL_VER}-preempt-rt8
 sudo cp ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
 sudo cp ../firmware/boot/{*bin,*dat,*elf} mnt/firmware/
 
+#install tp-link 8188eu driver
+sudo chroot mnt/root /bin/bash -c "cd /home/bit/wifi_driver ; ./install.sh"
+
 sudo sh -c 'cat > mnt/firmware/config.txt << EOF
 kernel=kernel.img
 core_freq=250
@@ -52,11 +49,12 @@ sudo sh -c 'cat > mnt/firmware/cmdline.txt << EOF
 dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0 dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 elevator=deadline rootwait
 EOF
 '
-sudo umount mnt/{firmware,root}
 
-if [ $CHECK_QEMU -eq 1 ]; then
-    sudo cp $(which qemu-arm-static) rootfs/usr/bin
+if [ -e mnt/root/usr/bin/qemu-arm-static ]; then
+    sudo rm -rf mnt/root/usr/bin/qemu-arm-static
 fi
+
+sudo umount mnt/{firmware,root}
 
 rm -rf rpi.img.bz2
 bzip2 -9 rpi.img
