@@ -1,31 +1,32 @@
 #!/bin/bash
 
 LOOP_DEV=loop0
-IMG_SIZE=6442450944  #6GB
+IMG_SIZE=6979321856  #6.5GB
 KERNEL_VER=4.1.9
 WIFI_DERIVER=8188eu-rpi-4.1.9-v7-preempt-rt8-4.1.7.tar.bz2
 DEVICE_TREE_BLOB=bcm2709-rpi-2-b.dtb
 
 dd if=/dev/zero of=rpi.img count=0 bs=1 seek=$IMG_SIZE
 
+#2GB for /firmware, 4GB for /
 sudo sh -c 'cat << EOF | sfdisk --force rpi.img
 unit: sectors
-1 : start=     2048, size=   4192256, Id= c
-2 : start=  4194304, size=   8388608, Id=83
+1 : start=     2048, size=   4194304, Id= c
+2 : start=  4196352, size=   8388608, Id=83
 EOF
 '
-sudo losetup /dev/$LOOP_DEV rpi.img -o $((2048*512))
+sudo losetup /dev/$LOOP_DEV rpi.img -o $((2048*512)) --sizelimit $((4194304*512))
 sudo mkfs.vfat -F 32 -n firmware /dev/$LOOP_DEV
 sleep 1
 sudo losetup -d /dev/$LOOP_DEV
-sudo losetup /dev/$LOOP_DEV rpi.img -o $((4194304*512))
+sudo losetup /dev/$LOOP_DEV rpi.img -o $((4196352*512)) --sizelimit $((8388608*512))
 sudo mkfs.ext4 -L root /dev/$LOOP_DEV
 sleep 1
 sudo losetup -d /dev/$LOOP_DEV
 
 mkdir -p mnt/{firmware,root}
 sudo mount -o loop,offset=$((2048*512)) rpi.img mnt/firmware
-sudo mount -o loop,offset=$((4194304*512)) rpi.img mnt/root
+sudo mount -o loop,offset=$((4196352*512)) rpi.img mnt/root
 
 sudo rsync -a rootfs/ mnt/root/
 sudo cp -a ../firmware/hardfp/opt/vc mnt/root/opt/
