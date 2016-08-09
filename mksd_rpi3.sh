@@ -4,7 +4,7 @@ LOOP_DEV=loop0
 IMG_SIZE=6979321856  #6.5GB
 KERNEL_VER=4.5.6
 # aws WIFI_DERIVER=8188eu-rpi-4.1.9-v7-preempt-rt8-4.1.7.tar.bz2
-# aws DEVICE_TREE_BLOB=bcm2709-rpi-2-b.dtb
+DEVICE_TREE_BLOB=bcm2710-rpi-3-b.dtb
 
 dd if=/dev/zero of=rpi.img count=0 bs=1 seek=$IMG_SIZE
 
@@ -27,6 +27,7 @@ sudo losetup -d /dev/$LOOP_DEV
 mkdir -p mnt/{firmware,root}
 sudo mount -o loop,offset=$((2048*512)) rpi.img mnt/firmware
 sudo mount -o loop,offset=$((4196352*512)) rpi.img mnt/root
+sudo mkdir -p mnt/firmware/overlays
 
 sudo rsync -a rootfs/ mnt/root/
 sudo cp -a ../firmware/hardfp/opt/vc mnt/root/opt/
@@ -34,12 +35,13 @@ sudo cp -a ../linux/build/dist/lib/modules mnt/root/lib/
 sudo cp -a ../linux/build/dist/include/* mnt/root/usr/include
 sudo cp ../linux/build/.config mnt/root/boot/config-${KERNEL_VER}-preempt-rt9
 #copy normal kernel, if use device tree, comment out line below
-sudo cp ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
+#sudo cp ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
 
 #tailer kernel for device tree support and copy dtb & overlays to target folder
 # aws sudo ../tools/mkimage/mkknlimg --dtok ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
-# aws sudo cp ../linux/build/arch/arm/boot/dts/${DEVICE_TREE_BLOB} mnt/firmware/
-# aws sudo cp ../linux/build/arch/arm/boot/dts/overlays mnt/firmware/
+sudo ../linux/scripts/mkknlimg --dtok ../linux/build/arch/arm/boot/zImage mnt/firmware/kernel.img
+sudo cp ../linux/build/arch/arm/boot/dts/${DEVICE_TREE_BLOB} mnt/firmware/
+sudo cp -a --no-preserve=ownership ../linux/build/arch/arm/boot/dts/overlays/*.dtbo mnt/firmware/overlays
 sudo cp ../firmware/boot/{*bin,*dat,*elf} mnt/firmware/
 
 #install tp-link 8188eu driver
