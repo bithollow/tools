@@ -63,6 +63,30 @@ sudo cp ../firmware/boot/{*bin,*dat,*elf} mnt/firmware/
 # aws    echo "rootfs is not stripped"
 # aws fi
 
+#enable hwclockfirst.service for ds1339
+sudo rm mnt/root/lib/systemd/system/hwclockfirst.service
+sudo sh -c 'cat > mnt/root/lib/systemd/system/hwclockfirst.service << EOF
+[Unit]
+Description=Synchronise Hardware Clock from System Clock
+After=sysinit.target
+Before=timers.target
+DefaultDependencies=no
+ConditionFileIsExecutable=!/usr/sbin/ntpd
+ConditionFileIsExecutable=!/usr/sbin/openntpd
+ConditionFileIsExecutable=!/usr/sbin/chrony
+ConditionVirtualization=!container
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/hwclock -D --hctosys
+
+[Install]
+WantedBy=multi-user.target
+'
+sudo cp $(which qemu-arm-static) mnt/root/usr/bin
+sudo chroot mnt/root ln /lib/systemd/system/hwclockfirst.service /etc/systemd/system/multi-user.target.wants
+
+#create config.txt
 sudo sh -c 'cat > mnt/firmware/config.txt << EOF
 #kernel=kernel.img
 #core_freq=250
@@ -78,6 +102,7 @@ dtoverlay=i2c-rtc,ds1339
 EOF
 '
 
+#create cmdline.txt
 sudo sh -c 'cat > mnt/firmware/cmdline.txt << EOF
 dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0 dwc_otg.lpm_enable=0 console=serial0,115200 kgdboc=serial0,115200 root=/dev/mmcblk0p2 rw rootfstype=ext4 elevator=deadline fsck.repair=yes root wait
 EOF
